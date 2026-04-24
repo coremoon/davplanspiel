@@ -1,5 +1,5 @@
 .PHONY: help install dev build preview test check lint simulate \
-        sim-quick sim-full db-init db-reset deploy-check clean
+        sim-quick sim-full db-init db-reset db-check deploy-check clean
 
 help:
 	@echo ""
@@ -8,8 +8,9 @@ help:
 	@echo ""
 	@echo "  ── Setup ─────────────────────────────────────────────"
 	@echo "    make install          Install npm dependencies"
-	@echo "    make db-init          ⚠️  Drop + recreate DB tables"
-	@echo "    make db-reset         ⚠️  Delete all game data"
+	@echo "    make db-init          ⚠️  Drop + recreate DB tables + delete auth users"
+	@echo "    make db-reset         ⚠️  Delete all game data (keep schema)"
+	@echo "    make db-check         Show DB row counts and auth user list"
 	@echo ""
 	@echo "  ── Development ───────────────────────────────────────"
 	@echo "    make dev              Vite dev server (localhost:5173)"
@@ -23,17 +24,17 @@ help:
 	@echo "    make deploy-check     Tests + build (run before git push)"
 	@echo ""
 
-# ── Setup ──────────────────────────────────────────────────────────────────
+# ── Database ───────────────────────────────────────────────────────────────
 
-install:
-	npm install
+db-check:
+	@npx tsx scripts/db_check.ts
 
 db-init:
 	@echo ""
 	@echo "  ╔══════════════════════════════════════════════════╗"
 	@echo "  ║  ⚠️  DANGER ZONE – IRREVERSIBLE OPERATION        ║"
-	@echo "  ║  ALL tables and data will be PERMANENTLY         ║"
-	@echo "  ║  DELETED and recreated from scratch.             ║"
+	@echo "  ║  ALL tables, data and auth users will be         ║"
+	@echo "  ║  PERMANENTLY DELETED and recreated.              ║"
 	@echo "  ║  Type  YES  (uppercase) to confirm.              ║"
 	@echo "  ╚══════════════════════════════════════════════════╝"
 	@echo ""
@@ -48,6 +49,9 @@ db-reset:
 	@./scripts/reset_supabase.sh
 
 # ── Development ────────────────────────────────────────────────────────────
+
+install:
+	npm install
 
 dev:
 	npm run dev

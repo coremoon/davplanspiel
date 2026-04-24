@@ -61,7 +61,6 @@ function gameIdBannerHTML(gameId: string): string {
 
 async function renderAdmin(root: HTMLElement): Promise<void> {
   root.innerHTML = loadingHTML()
-
   const { session } = store.get()
   if (!session) return
 
@@ -83,7 +82,6 @@ async function renderAdmin(root: HTMLElement): Promise<void> {
 
   root.innerHTML = `
     ${gameIdBannerHTML(gameId)}
-
     <div class="page-header">
       <h2>⚙️ ${t('home.title_admin')}</h2>
       ${periodBadge(runTimes, cfg.anzahl_durchlauefe)}
@@ -101,30 +99,21 @@ async function renderAdmin(root: HTMLElement): Promise<void> {
         </label>
       </div>
     </div>
-
     <div class="metrics-row">
       ${metricCard(t('home.metric_round'),        runTimes > 0 ? String(runTimes) : '–')}
       ${metricCard(t('home.metric_groups'),        String(gruppen.length))}
       ${metricCard(t('home.metric_max_rounds'),    String(cfg.anzahl_durchlauefe))}
       ${metricCard(t('home.metric_groups_ready'),  runTimes > 0 ? `${readyCount}/${cfg.anzahl_gruppen}` : '–')}
     </div>
-
-    <div id="perioden-panel">
-      ${periodenPanelHTML(runTimes, ready, readyCount, cfg, periodGd)}
-    </div>
-
+    <div id="perioden-panel">${periodenPanelHTML(runTimes, ready, readyCount, cfg, periodGd)}</div>
     <details class="panel" ${runTimes === 0 ? 'open' : ''}>
       <summary><strong>🎛️ ${t('home.settings_title')}</strong></summary>
       <div class="settings-form">${settingsFormHTML(cfg)}</div>
     </details>
-
     <div id="gruppen-panel">${gruppenPanelHTML(gruppen)}</div>
-
     <div class="panel panel-danger">
       <h3>${t('home.danger_zone')}</h3>
-      <p style="margin-bottom:.75rem;font-size:.875rem;color:var(--color-muted)">
-        ${t('home.danger_zone_hint')}
-      </p>
+      <p style="margin-bottom:.75rem;font-size:.875rem;color:var(--color-muted)">${t('home.danger_zone_hint')}</p>
       <div class="btn-row">
         <button class="btn btn-outline-danger" id="btn-new-game">${t('home.btn_new_game')}</button>
         <button class="btn btn-outline-danger" id="btn-archive-game">${t('home.btn_archive_game')}</button>
@@ -148,7 +137,6 @@ function renderCreateGame(root: HTMLElement): void {
 
   root.innerHTML = `
     <div class="page-header"><h2>${t('home.new_game_title')}</h2></div>
-
     <div class="panel panel-success">
       <h3>${t('home.new_game_id_title')}</h3>
       <p style="margin-bottom:.75rem;color:var(--color-muted)">${t('home.new_game_id_hint')}</p>
@@ -161,12 +149,10 @@ function renderCreateGame(root: HTMLElement): void {
       </div>
       <p style="margin-top:.5rem;font-size:.8rem;color:var(--color-muted)">${t('home.new_game_id_random')}</p>
     </div>
-
     <details class="panel" open>
       <summary><strong>🎛️ ${t('home.settings_title')}</strong></summary>
       <div class="settings-form">${settingsFormHTML(DEFAULT_CONFIG)}</div>
     </details>
-
     <div class="btn-row" style="margin-top:1rem">
       <button class="btn btn-primary btn-lg" id="btn-create-game">${t('home.btn_start_game')}</button>
       <button class="btn btn-secondary"      id="btn-regenerate-id">${t('home.btn_new_id')}</button>
@@ -181,21 +167,17 @@ function renderCreateGame(root: HTMLElement): void {
   })
 
   document.getElementById('btn-regenerate-id')?.addEventListener('click', () => {
-    const target = document.getElementById('app') ?? document.body
-    renderCreateGame(target)
+    renderCreateGame(document.getElementById('app') ?? document.body)
   })
 
   document.getElementById('btn-create-game')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-create-game') as HTMLButtonElement | null
     if (btn) { btn.disabled = true; btn.textContent = t('home.btn_creating') }
-
     const newCfg = readConfigFromForm(DEFAULT_CONFIG)
     const { data: { user } } = await getSupabaseClient().auth.getUser()
     if (!user) { showNotification('error', t('home.not_logged_in')); return }
-
     await createGame(gameId, user.id, newCfg)
     await setRunTimes(gameId, 1)
-
     store.set({ spielId: gameId, cfg: newCfg, runTimes: 1 })
     showNotification('success', t('home.game_created', { words }))
     navigate('home')
@@ -228,24 +210,15 @@ function periodenPanelHTML(
         ? `<p style="margin-bottom:.75rem">${t('home.all_ready', { count: cfg.anzahl_gruppen })}</p>`
         : `<p style="margin-bottom:.75rem">${t('home.waiting', { ready: readyCount, total: cfg.anzahl_gruppen })}</p>`
       }
-      ${periodGd.length > 0
-        ? tableHTML(
-            [t('overview.col_group'), t('overview.col_premium_adj'), t('overview.col_dividend')],
-            periodGd.map((g: any) => [
-              g.Gruppe,
-              `${(g.Praemienanpassung * 100).toFixed(1)}%`,
-              formatEuro(g.Dividendenausschuettung),
-            ]),
-          )
-        : ''
-      }
+      ${periodGd.length > 0 ? tableHTML(
+          [t('overview.col_group'), t('overview.col_premium_adj'), t('overview.col_dividend')],
+          periodGd.map((g: any) => [g.Gruppe, `${(g.Praemienanpassung * 100).toFixed(1)}%`, formatEuro(g.Dividendenausschuettung)]),
+        ) : ''}
       <div style="margin-top:1rem">
         <button class="btn btn-primary btn-lg" id="btn-starte-algorithmus" ${ready ? '' : 'disabled'}>
           ${t('home.btn_run_algorithm')}
         </button>
-        ${!ready ? `<p class="form-help" style="margin-top:.5rem">
-          ${t('home.btn_run_disabled', { count: cfg.anzahl_gruppen - readyCount })}
-        </p>` : ''}
+        ${!ready ? `<p class="form-help" style="margin-top:.5rem">${t('home.btn_run_disabled', { count: cfg.anzahl_gruppen - readyCount })}</p>` : ''}
       </div>
     </div>
   `
@@ -280,17 +253,11 @@ function settingsFormHTML(cfg: StaticConfig): string {
         ${sliderHTML({ id: 'cfg-gruppen',  label: t('home.cfg_groups'),  min: 2,  max: 8,  value: cfg.anzahl_gruppen,     step: 1 })}
         ${sliderHTML({ id: 'cfg-jahre',    label: t('home.cfg_years'),   min: 1,  max: 5,  value: cfg.anzahl_jahre,       step: 1 })}
         ${sliderHTML({ id: 'cfg-perioden', label: t('home.cfg_rounds'),  min: 1,  max: 11, value: cfg.anzahl_durchlauefe, step: 1 })}
-        <label class="checkbox-label">
-          <input type="checkbox" id="cfg-random" checked/>
-          ${t('home.settings_random')}
-        </label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-random" checked/> ${t('home.settings_random')}</label>
       </div>
       <div>
         <h4>${t('home.settings_expert')}</h4>
-        <label class="checkbox-label">
-          <input type="checkbox" id="cfg-experten"/>
-          ${t('home.settings_expert_show')}
-        </label>
+        <label class="checkbox-label"><input type="checkbox" id="cfg-experten"/> ${t('home.settings_expert_show')}</label>
         <div id="expert-params" style="display:none">
           ${sliderHTML({ id: 'cfg-ek',      label: t('home.cfg_equity_start'),   min: 300_000, max: 600_000, value: cfg.eigenkapital_start,     step: 10_000 })}
           ${sliderHTML({ id: 'cfg-praemie', label: t('home.cfg_premium_start'),  min: 400,     max: 1_240,   value: cfg.praemie_start,          step: 10 })}
@@ -322,16 +289,11 @@ function readConfigFromForm(current: StaticConfig): StaticConfig {
     anzahl_jahre:       v('cfg-jahre')   || current.anzahl_jahre,
     anzahl_durchlauefe: v('cfg-perioden')|| current.anzahl_durchlauefe,
     ...(expertOn ? {
-      eigenkapital_start: v('cfg-ek'),
-      praemie_start:      v('cfg-praemie'),
-      policenzahl_start:  v('cfg-policen'),
-      MinSolv:            v('cfg-minsolv') / 100,
-      MaxSolv:            v('cfg-maxsolv') / 100,
-      Fixkosten:          v('cfg-fixk'),
-      Varkosten:          v('cfg-vark'),
-      dmg_my:             v('cfg-dmg-my'),
-      dmg_sd:             v('cfg-dmg-sd'),
-      Risk_StDev:         v('cfg-risk'),
+      eigenkapital_start: v('cfg-ek'),      praemie_start:    v('cfg-praemie'),
+      policenzahl_start:  v('cfg-policen'), MinSolv:          v('cfg-minsolv') / 100,
+      MaxSolv:            v('cfg-maxsolv') / 100, Fixkosten:  v('cfg-fixk'),
+      Varkosten:          v('cfg-vark'),    dmg_my:           v('cfg-dmg-my'),
+      dmg_sd:             v('cfg-dmg-sd'), Risk_StDev:        v('cfg-risk'),
       Preiselastizitat:   v('cfg-elast') / 100,
     } : {}),
   }
@@ -347,7 +309,7 @@ function attachAllSliderDisplays(): void {
   attachSliderDisplay('cfg-risk',    '')
 }
 
-// ── Polling ────────────────────────────────────────────────────────────────
+// ── Polling (admin) ────────────────────────────────────────────────────────
 
 function startPolling(gameId: string, cfg: StaticConfig, runTimes: number, intervalSecs: number): void {
   stopPolling()
@@ -369,8 +331,7 @@ function startPolling(gameId: string, cfg: StaticConfig, runTimes: number, inter
 
 async function refreshPeriodenPanel(gameId: string, cfg: StaticConfig, runTimes: number): Promise<void> {
   const [gruppen, gd, ready] = await Promise.all([
-    getGruppen(gameId),
-    getGroupadminData(gameId),
+    getGruppen(gameId), getGroupadminData(gameId),
     gruppenBereitFuerPeriode(gameId, runTimes, cfg.anzahl_gruppen),
   ])
   const periodGd   = gd.filter((g: any) => g.Jahr === runTimes)
@@ -390,7 +351,7 @@ async function refreshPeriodenPanel(gameId: string, cfg: StaticConfig, runTimes:
   if (dot) { dot.classList.add('poll-dot-pulse'); setTimeout(() => dot.classList.remove('poll-dot-pulse'), 400) }
 }
 
-// ── Listeners ─────────────────────────────────────────────────────────────
+// ── Admin listeners ────────────────────────────────────────────────────────
 
 function attachGroupListeners(gameId: string): void {
   document.getElementById('btn-delete-gruppe')?.addEventListener('click', async () => {
@@ -425,7 +386,6 @@ function attachAdminListeners(cfg: StaticConfig, gameId: string, runTimes: numbe
 
   attachGroupListeners(gameId)
 
-  // Archive game – releases the 4-word ID for reuse, navigates to create-game screen
   document.getElementById('btn-archive-game')?.addEventListener('click', async () => {
     if (!confirm(t('home.confirm_archive'))) return
     stopPolling()
@@ -484,14 +444,21 @@ async function renderGroupAdmin(root: HTMLElement): Promise<void> {
 
   const gruppe = session.gruppe
 
+  // Game not started yet – poll until it does
   if (runTimes === 0) {
     root.innerHTML = `
       <div class="page-header"><h2>📋 ${gruppe}</h2></div>
       ${alertHTML('info', t('home.game_not_started'))}
     `
+    stopPolling()
+    _pollTimer = setInterval(async () => {
+      const rt = await getRunTimes(spielId)
+      if (rt > 0) { stopPolling(); void renderGroupAdmin(root) }
+    }, 5_000)
     return
   }
 
+  // Game finished
   if (runTimes > cfg.anzahl_durchlauefe) {
     root.innerHTML = `
       <div class="page-header"><h2>📋 ${gruppe}</h2></div>
@@ -501,6 +468,10 @@ async function renderGroupAdmin(root: HTMLElement): Promise<void> {
     document.getElementById('btn-goto-sieger')?.addEventListener('click', () => navigate('sieger'))
     return
   }
+
+  // Load already-saved input for this round (if any)
+  const allInputs  = await getGroupadminData(spielId)
+  const savedInput = allInputs.find((g: any) => g.Gruppe === gruppe && g.Jahr === runTimes)
 
   let oldPremium = cfg.praemie_start, oldDividend = 0, maxDiv = 100_000, minDiv = 0
   if (gamedata) {
@@ -514,29 +485,32 @@ async function renderGroupAdmin(root: HTMLElement): Promise<void> {
     }
   }
 
+  // Use saved values as slider defaults so both devices show the same state
+  const initPct = savedInput ? savedInput.Praemienanpassung * 100 : 0
+  const initDiv = savedInput ? savedInput.Dividendenausschuettung : Math.floor(minDiv)
+
   root.innerHTML = `
     <div class="page-header">
       <h2>📋 ${t('home.title_group')} – ${gruppe}</h2>
       ${periodBadge(runTimes, cfg.anzahl_durchlauefe)}
     </div>
     <div class="panel">
+      ${savedInput ? `<div class="alert alert-success" style="margin-bottom:1rem">✅ ${t('home.inputs_saved')}</div>` : ''}
       <div class="form-section">
         ${sliderHTML({ id: 'inp-praemie', label: t('home.input_premium'),
-          min: -10, max: 10, value: 0, step: 1, suffix: '%',
+          min: -10, max: 10, value: initPct, step: 1, suffix: '%',
           help: t('home.input_premium_hint', { value: oldPremium.toFixed(2) }) })}
         <div class="neue-praemie-info">
-          ${t('home.new_premium')} <strong id="neue-praemie-display">${oldPremium.toFixed(2)} €</strong>
+          ${t('home.new_premium')} <strong id="neue-praemie-display">${(oldPremium * (1 + initPct / 100)).toFixed(2)} €</strong>
         </div>
       </div>
       <div class="form-section">
         ${sliderHTML({ id: 'inp-dividende', label: t('home.input_dividend'),
           min: Math.floor(minDiv),
           max: Math.max(Math.ceil(maxDiv), Math.floor(minDiv) + 1_000),
-          value: Math.floor(minDiv), step: 1_000, suffix: ' €',
+          value: initDiv, step: 1_000, suffix: ' €',
           help: t('home.input_dividend_hint', {
-            old: oldDividend.toFixed(0),
-            min: minDiv.toFixed(0),
-            max: maxDiv.toFixed(0),
+            old: oldDividend.toFixed(0), min: minDiv.toFixed(0), max: maxDiv.toFixed(0),
           }) })}
       </div>
       <button class="btn btn-primary btn-lg btn-full" id="btn-save-inputs">
@@ -562,9 +536,22 @@ async function renderGroupAdmin(root: HTMLElement): Promise<void> {
       Gruppe: gruppe, Praemienanpassung: pct,
       Dividendenausschuettung: dividend, Jahr: runTimes,
     })
-    const res = document.getElementById('save-result')
-    if (res) res.innerHTML = alertHTML('success', t('home.inputs_saved'))
-    setTimeout(() => { if (res) res.innerHTML = '' }, 3000)
+    // Re-render so this device and others immediately see the saved state
+    void renderGroupAdmin(root)
+  })
+
+  // Realtime: re-render when inputs or game state changes (catches saves from other devices)
+  const ch = getSupabaseClient()
+    .channel(`group-home:${spielId}:${gruppe}:${runTimes}`)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'group_inputs',
+      filter: `game_id=eq.${spielId}` }, () => { void renderGroupAdmin(root) })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state',
+      filter: `game_id=eq.${spielId}` }, () => { void renderGroupAdmin(root) })
+    .subscribe()
+
+  // Unsubscribe when navigating away
+  store.subscribe(state => {
+    if (state.activeTab !== 'home') void getSupabaseClient().removeChannel(ch)
   })
 }
 

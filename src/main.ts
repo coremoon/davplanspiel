@@ -21,17 +21,36 @@ import { store } from './ui/state'
 // ── Boot ───────────────────────────────────────────────────────────────────
 
 async function boot(): Promise<void> {
-  // i18n must be ready before any t() call or renderApp()
   await initI18n()
   mountLangSwitcher()
+  await validateSession()   // clear stale sessions before rendering
   setupRealtimeAndHeartbeat()
   renderApp()
+}
+
+/**
+ * Validate the stored session against Supabase Auth.
+ * Clears sessionStorage if the JWT is no longer valid
+ * (e.g. after make db-init deleted all auth users).
+ */
+async function validateSession(): Promise<void> {
+  const s = getSession()
+  if (!s || s.login_as === '') return
+
+  if (s.login_as === 'admin') {
+    // Verify Supabase Auth session is still valid
+    const { data: { user } } = await getSupabaseClient().auth.getUser()
+    if (!user) {
+      clearSession()
+      store.set({ session: null, activeTab: 'login' })
+    }
+  }
+  // Groups: heartbeat handles validation after boot
 }
 
 // ── Reset message ──────────────────────────────────────────────────────────
 
 function showResetMessage(reason: 'game_gone' | 'group_gone' | 'restart'): void {
-  // Import t() lazily to avoid circular – i18n is already initialised by boot()
   import('./i18n').then(({ t }) => {
     const messages: Record<string, string> = {
       game_gone:  t('reset.game_gone'),
@@ -75,8 +94,21 @@ function stopHeartbeat(): void {
 
 async function heartbeatTick(): Promise<void> {
   const s = getSession()
-  if (!s || s.login_as === 'admin' || s.login_as === '') return
+  if (!s || s.login_as === '') return
 
+  // Admin: verify Supabase Auth session is still valid
+  if (s.login_as === 'admin') {
+    const { data: { user } } = await getSupabaseClient().auth.getUser()
+    if (!user) {
+      clearSession()
+      store.set({ session: null, activeTab: 'login' })
+      stopHeartbeat()
+      renderApp()
+    }
+    return
+  }
+
+  // Group / viewer: verify game and group still exist
   const { spiel_id: gameId, gruppe } = s
   try {
     const cfg = await loadConfig(gameId)
@@ -97,7 +129,7 @@ function startHeartbeat(): void {
   stopHeartbeat()
   _lastRunTimes = -1
   const s = getSession()
-  if (!s || s.login_as === 'admin' || s.login_as === '') return
+  if (!s || s.login_as === '') return
   setTimeout(() => {
     void heartbeatTick()
     _heartbeatTimer = setInterval(() => { void heartbeatTick() }, 8_000)
@@ -133,14 +165,6 @@ function setupRealtime(gameId: string): void {
       renderApp()
     })
   })
-
-  getSupabaseClient()
-    .channel(`gruppen-delete:${gameId}`)
-    .on('postgres_changes', {
-      event: 'DELETE', schema: 'public', table: 'gruppen',
-      filter: `spiel_id=eq.${gameId}`,
-    }, () => { void heartbeatTick() })
-    .subscribe()
 }
 
 // ── Wiring ─────────────────────────────────────────────────────────────────
@@ -151,8 +175,8 @@ function setupRealtimeAndHeartbeat(): void {
     store.set({ session: initialSession, spielId: initialSession.spiel_id, activeTab: 'home' })
   }
 
-  const initialGameId = initialSession?.spiel_id ?? 'default'
-  setupRealtime(initialGameId)
+  const initialGameId = initialSession?.spiel_id ?? ''
+  if (initialGameId) setupRealtime(initialGameId)
   setTimeout(() => startHeartbeat(), 500)
 
   let lastGameId = initialGameId

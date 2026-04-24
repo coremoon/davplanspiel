@@ -42,6 +42,13 @@ jobs:
           VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_BASE_URL:          /davplanspiel/
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PAT: ${{ secrets.SUPABASE_PAT }}
+          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
+          HCAPTCHA_SECRET: ${{ secrets.HCAPTCHA_SECRET }}
+          VITE_CAPTCHA_ENABLED: true
+          VITE_HCAPTCHA_SITEKEY: ${{ secrets.VITE_HCAPTCHA_SITEKEY }}
+
         run: npm run build
 
       - name: Setup Pages

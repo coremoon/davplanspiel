@@ -1,9 +1,6 @@
 /**
- * Supabase store – schema v2.3
+ * Supabase store – schema v2.4
  * Tables: games, groups, group_inputs, game_results, game_state, audit_log
- *
- * Audit events are written exclusively by DB triggers (SECURITY DEFINER).
- * The client never writes to audit_log directly.
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
@@ -23,6 +20,19 @@ export function getSupabaseClient(): SupabaseClient {
   return _client
 }
 
+// ── PIN helpers ────────────────────────────────────────────────────────────
+
+/** Generate a random 4-digit PIN as a zero-padded string, e.g. "0472" */
+export function generatePin(): string {
+  return String(Math.floor(Math.random() * 10_000)).padStart(4, '0')
+}
+
+/** SHA-256 hash of a PIN string. Returns hex string. */
+export async function hashPin(pin: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
 // ── Games ──────────────────────────────────────────────────────────────────
 
 export interface GameMeta {
@@ -32,23 +42,15 @@ export interface GameMeta {
   status: string
 }
 
-/** Load config of the active (non-archived) game with this ID */
 export async function loadConfig(gameId: string): Promise<StaticConfig | null> {
   const { data } = await getSupabaseClient()
-    .from('games')
-    .select('config')
-    .eq('id', gameId)
-    .neq('status', 'archived')
-    .maybeSingle()
+    .from('games').select('config').eq('id', gameId).neq('status', 'archived').maybeSingle()
   return data ? (data['config'] as StaticConfig) : null
 }
 
 export async function saveConfig(gameId: string, cfg: StaticConfig): Promise<void> {
-  await getSupabaseClient()
-    .from('games')
-    .update({ config: cfg })
-    .eq('id', gameId)
-    .neq('status', 'archived')
+  await getSupabaseClient().from('games').update({ config: cfg })
+    .eq('id', gameId).neq('status', 'archived')
 }
 
 export async function createGame(
@@ -62,25 +64,18 @@ export async function createGame(
   await sb.from('game_state').insert({ game_id: gameId, key: 'run_times', value: 0 })
 }
 
-/** List all active (non-archived) games owned by current user */
 export async function listMyGames(): Promise<GameMeta[]> {
   const { data: { user } } = await getSupabaseClient().auth.getUser()
   if (!user) return []
   const { data } = await getSupabaseClient()
-    .from('games')
-    .select('id, title, config, status')
-    .eq('owner_id', user.id)
-    .neq('status', 'archived')
+    .from('games').select('id, title, config, status')
+    .eq('owner_id', user.id).neq('status', 'archived')
     .order('created_at', { ascending: false })
   return (data ?? []) as GameMeta[]
 }
 
-/** Archive a game – releases its 4-word ID for reuse */
 export async function archiveGame(gameId: string): Promise<void> {
-  await getSupabaseClient()
-    .from('games')
-    .update({ status: 'archived' })
-    .eq('id', gameId)
+  await getSupabaseClient().from('games').update({ status: 'archived' }).eq('id', gameId)
 }
 
 export async function resetSpiel(gameId: string): Promise<void> {
@@ -127,15 +122,32 @@ export async function gruppeExistiert(gameId: string, name: string): Promise<boo
   return !!data
 }
 
-export async function createGruppe(gameId: string, name: string, _pwHash: string): Promise<void> {
+/**
+ * Create a new group with a hashed PIN.
+ * Throws 'GAME_FULL' if DB trigger rejects due to capacity.
+ * Throws 'GROUP_EXISTS' on duplicate name.
+ */
+export async function createGruppe(gameId: string, name: string, pinHash: string): Promise<void> {
   const { error } = await getSupabaseClient()
-    .from('groups').insert({ game_id: gameId, name })
+    .from('groups').insert({ game_id: gameId, name, pin_hash: pinHash })
   if (error) {
     if (error.code === 'P0001' && error.message.toLowerCase().includes('full'))
       throw new Error('GAME_FULL')
     if (error.code === '23505') throw new Error('GROUP_EXISTS')
     throw new Error(error.message)
   }
+}
+
+/**
+ * Verify a PIN for an existing group.
+ * Returns true if the hash matches.
+ */
+export async function verifyGroupPin(gameId: string, name: string, pin: string): Promise<boolean> {
+  const { data } = await getSupabaseClient()
+    .from('groups').select('pin_hash').eq('game_id', gameId).eq('name', name).maybeSingle()
+  if (!data) return false
+  const candidate = await hashPin(pin)
+  return candidate === (data['pin_hash'] as string)
 }
 
 export async function deleteGruppe(gameId: string, name: string): Promise<void> {

@@ -157,8 +157,7 @@ Repository → Settings → Secrets and variables → Actions → Variables:
 | `VITE_BASE_URL` | `/REPO-NAME/` (with leading and trailing slash) |
 | `VITE_CAPTCHA_ENABLED` | `true` |
 
-After the first push, the workflow builds and deploys automatically.  
-The deployment URL is shown in the GitHub Actions run summary.
+After the first push, the workflow builds and deploys automatically.
 
 **5. Update Supabase allowed origins:**
 
@@ -190,18 +189,41 @@ so German and English speakers can join the same game using their own language's
 | Role | Auth | Access |
 |---|---|---|
 | **Game Master** | Supabase Auth (email + password) | Creates and controls games, runs the algorithm |
-| **Group** | Anonymous (game ID is the shared secret) | Submits premium and dividend decisions each round |
-| **Spectator** | Anonymous (game ID required) | Read-only view of group analysis |
+| **Group** | Game ID + 4-digit PIN | Submits premium and dividend decisions each round |
+| **Spectator** | Game ID + group name (read-only) | View-only access to group analysis |
+
+---
+
+## Group login flow
+
+Group authentication uses a **two-step process**:
+
+**First device (joining the game):**
+1. Enter company name + 4-word game ID → **Continue**
+2. If the group name is new and there is space in the game, the group is created automatically
+3. A random **4-digit PIN** is generated and displayed **once** – write it down
+4. Confirm → logged in
+
+**Additional devices (re-login):**
+1. Enter company name + 4-word game ID → **Continue**
+2. The group is recognised → PIN entry field appears
+3. Enter PIN → logged in
+
+The PIN prevents other groups from logging in as a competitor.  
+It is hashed (SHA-256) before storage – the plain PIN is never saved.  
+The PIN does not need to be secret beyond the game session; its purpose is  
+casual separation between teams in the same room, not high-security authentication.
 
 ---
 
 ## Security
 
 - **Game master passwords** are managed by Supabase Auth (bcrypt internally)
-- **Group access** is controlled by the game ID – no per-group password
+- **Group PINs** are hashed with SHA-256 client-side before being stored
+- **Game ID** is public and shared with all participants – it identifies the game, not the group
 - **Row Level Security** on all tables – the anon key cannot bypass ownership checks
 - **Group capacity** is enforced by a Postgres trigger (atomic, race-condition safe)
-- **Audit log** records all game lifecycle events (creation, rounds, group joins) via DB triggers
+- **Audit log** records all game lifecycle events via DB triggers (SECURITY DEFINER)
 
 ---
 
@@ -242,7 +264,7 @@ src/
 │   ├── gameId.ts            4-word ID system, Levenshtein fuzzy matching
 │   └── gameId.test.ts
 ├── store/
-│   └── supabase.ts          All DB operations
+│   └── supabase.ts          All DB operations incl. PIN hashing
 └── ui/
     ├── router.ts
     ├── state.ts
@@ -252,7 +274,7 @@ src/
     │   ├── charts.ts        ApexCharts wrappers
     │   └── widgets.ts       Reusable UI elements
     └── pages/
-        ├── login.ts         Game master + group + spectator login
+        ├── login.ts         Two-step group login with PIN flow
         ├── home.ts          Game master dashboard / group input form
         ├── analyse_gruppe.ts
         ├── analyse_markt.ts
@@ -262,7 +284,7 @@ src/
 scripts/
 ├── db_init.ts               Deploy schema via Supabase Management API
 ├── simulate.ts              Headless end-to-end simulation
-├── supabase_schema.sql      Full DB schema (v2.3)
+├── supabase_schema.sql      Full DB schema (v2.4)
 └── reset_supabase.sh        Delete all game data via REST API
 ```
 

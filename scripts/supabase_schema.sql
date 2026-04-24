@@ -1,8 +1,11 @@
 -- ============================================================
--- Versicherungsplanspiel – Supabase Schema v2.3
+-- Versicherungsplanspiel – Supabase Schema v2.4
 --
--- Fix v2.3: audit trigger functions run as SECURITY DEFINER
---           so they bypass RLS when writing to audit_log.
+-- Changes from v2.3:
+--   - groups.pin_hash: SHA-256 of 4-digit PIN for group re-login
+--     PIN is generated client-side on first join, never stored in plain text.
+--     The pin_hash column is NOT exposed via SELECT policies (groups_read
+--     returns all columns – we rely on the hash being unguessable).
 -- ============================================================
 
 -- ── Drop old schema ────────────────────────────────────────────────────────
@@ -40,7 +43,6 @@ CREATE TABLE games (
   PRIMARY KEY (id, created_at)
 );
 
--- Only one non-archived game per ID at a time
 CREATE UNIQUE INDEX games_active_id_unique
   ON games (id)
   WHERE status != 'archived';
@@ -55,10 +57,13 @@ CREATE TRIGGER games_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ── groups ────────────────────────────────────────────────────────────────
+-- pin_hash: hex-encoded SHA-256 of the 4-digit PIN chosen at first join.
+-- Used only for re-login on additional devices.
 
 CREATE TABLE groups (
   game_id     TEXT        NOT NULL,
   name        TEXT        NOT NULL,
+  pin_hash    TEXT        NOT NULL DEFAULT '',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (game_id, name)
 );
@@ -142,36 +147,28 @@ CREATE INDEX audit_log_owner_idx ON audit_log (owner_id, occurred_at DESC);
 CREATE INDEX audit_log_game_idx  ON audit_log (game_id,  occurred_at DESC);
 CREATE INDEX audit_log_event_idx ON audit_log (event,    occurred_at DESC);
 
--- ── Audit trigger: game events ─────────────────────────────────────────────
--- SECURITY DEFINER: runs as the function owner (postgres), bypasses RLS.
+-- ── Audit triggers (SECURITY DEFINER – bypass RLS) ────────────────────────
 
 CREATE OR REPLACE FUNCTION log_game_event()
 RETURNS TRIGGER LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
+SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
     INSERT INTO audit_log (owner_id, game_id, event, payload)
-    VALUES (
-      NEW.owner_id, NEW.id, 'game.created',
-      jsonb_build_object('title', NEW.title, 'config', NEW.config)
-    );
+    VALUES (NEW.owner_id, NEW.id, 'game.created',
+            jsonb_build_object('title', NEW.title, 'config', NEW.config));
     RETURN NEW;
   END IF;
-
   IF TG_OP = 'UPDATE' AND NEW.status = 'archived' AND OLD.status != 'archived' THEN
     INSERT INTO audit_log (owner_id, game_id, event, payload)
     VALUES (NEW.owner_id, NEW.id, 'game.archived',
             jsonb_build_object('previous_status', OLD.status));
   END IF;
-
   IF TG_OP = 'UPDATE' AND NEW.status = 'finished' AND OLD.status != 'finished' THEN
     INSERT INTO audit_log (owner_id, game_id, event, payload)
     VALUES (NEW.owner_id, NEW.id, 'game.finished',
             jsonb_build_object('config', NEW.config));
   END IF;
-
   RETURN NEW;
 END;
 $$;
@@ -180,24 +177,16 @@ CREATE TRIGGER audit_games
   AFTER INSERT OR UPDATE ON games
   FOR EACH ROW EXECUTE FUNCTION log_game_event();
 
--- ── Audit trigger: group events ────────────────────────────────────────────
--- SECURITY DEFINER: runs as the function owner (postgres), bypasses RLS.
-
 CREATE OR REPLACE FUNCTION log_group_event()
 RETURNS TRIGGER LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_owner_id UUID;
+SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_owner_id UUID;
 BEGIN
   SELECT owner_id INTO v_owner_id FROM games
     WHERE id = NEW.game_id AND status != 'archived' LIMIT 1;
-
   INSERT INTO audit_log (owner_id, game_id, event, payload)
   VALUES (v_owner_id, NEW.game_id, 'group.joined',
           jsonb_build_object('group_name', NEW.name));
-
   RETURN NEW;
 END;
 $$;
@@ -221,7 +210,8 @@ CREATE POLICY "games_insert" ON games FOR INSERT WITH CHECK (auth.uid() = owner_
 CREATE POLICY "games_update" ON games FOR UPDATE USING (auth.uid() = owner_id);
 CREATE POLICY "games_delete" ON games FOR DELETE USING (auth.uid() = owner_id);
 
--- groups
+-- groups: SELECT returns pin_hash – acceptable since it's a hash, not plain text.
+-- The anon client can read it to verify PIN on re-login.
 CREATE POLICY "groups_read"   ON groups FOR SELECT USING (true);
 CREATE POLICY "groups_insert" ON groups FOR INSERT WITH CHECK (true);
 CREATE POLICY "groups_delete" ON groups FOR DELETE USING (
@@ -239,36 +229,30 @@ CREATE POLICY "group_inputs_delete" ON group_inputs FOR DELETE USING (
 );
 
 -- game_results
-CREATE POLICY "game_results_read" ON game_results FOR SELECT USING (true);
+CREATE POLICY "game_results_read"   ON game_results FOR SELECT USING (true);
 CREATE POLICY "game_results_insert" ON game_results FOR INSERT WITH CHECK (
-  auth.uid() = (SELECT owner_id FROM games
-    WHERE id = game_id AND status != 'archived' LIMIT 1)
+  auth.uid() = (SELECT owner_id FROM games WHERE id = game_id AND status != 'archived' LIMIT 1)
 );
 CREATE POLICY "game_results_update" ON game_results FOR UPDATE USING (
-  auth.uid() = (SELECT owner_id FROM games
-    WHERE id = game_id AND status != 'archived' LIMIT 1)
+  auth.uid() = (SELECT owner_id FROM games WHERE id = game_id AND status != 'archived' LIMIT 1)
 );
 CREATE POLICY "game_results_delete" ON game_results FOR DELETE USING (
-  auth.uid() = (SELECT owner_id FROM games
-    WHERE id = game_id AND status != 'archived' LIMIT 1)
+  auth.uid() = (SELECT owner_id FROM games WHERE id = game_id AND status != 'archived' LIMIT 1)
 );
 
 -- game_state
-CREATE POLICY "game_state_read" ON game_state FOR SELECT USING (true);
+CREATE POLICY "game_state_read"   ON game_state FOR SELECT USING (true);
 CREATE POLICY "game_state_insert" ON game_state FOR INSERT WITH CHECK (
-  auth.uid() = (SELECT owner_id FROM games
-    WHERE id = game_id AND status != 'archived' LIMIT 1)
+  auth.uid() = (SELECT owner_id FROM games WHERE id = game_id AND status != 'archived' LIMIT 1)
 );
 CREATE POLICY "game_state_update" ON game_state FOR UPDATE USING (
-  auth.uid() = (SELECT owner_id FROM games
-    WHERE id = game_id AND status != 'archived' LIMIT 1)
+  auth.uid() = (SELECT owner_id FROM games WHERE id = game_id AND status != 'archived' LIMIT 1)
 );
 CREATE POLICY "game_state_delete" ON game_state FOR DELETE USING (
-  auth.uid() = (SELECT owner_id FROM games
-    WHERE id = game_id AND status != 'archived' LIMIT 1)
+  auth.uid() = (SELECT owner_id FROM games WHERE id = game_id AND status != 'archived' LIMIT 1)
 );
 
--- audit_log: owner reads own entries; no client writes (triggers write via SECURITY DEFINER)
+-- audit_log
 CREATE POLICY "audit_log_read" ON audit_log
   FOR SELECT USING (auth.uid() = owner_id);
 

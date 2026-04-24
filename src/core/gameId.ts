@@ -250,21 +250,29 @@ export function resolveToken(token: string, lang: LangCode): TokenResult {
 
   if (slug.length === 1) {
     const idx = slug.charCodeAt(0) - 97
-    if (idx >= 0 && idx <= 25) {
+    if (idx >= 0 && idx <= 25)
       return { ok: true, index: idx, matched: slug, distance: 0, mode: 'letter' }
-    }
     return { ok: false, input: token }
   }
 
-  const exact = WORD_LISTS[lang].indexOf(slug)
-  if (exact !== -1) {
-    return { ok: true, index: exact, matched: slug, distance: 0, mode: 'exact' }
+  // Try all languages – current lang first
+  const langs: LangCode[] = [lang, ...(['de','en','fr','es'] as LangCode[]).filter(l => l !== lang)]
+  for (const l of langs) {
+    const exact = WORD_LISTS[l].indexOf(slug)
+    if (exact !== -1)
+      return { ok: true, index: exact, matched: slug, distance: 0, mode: 'exact' }
   }
 
-  const fuzzy = fuzzyMatchWord(slug, lang)
-  if (fuzzy) {
-    return { ok: true, index: fuzzy.index, matched: fuzzy.word, distance: fuzzy.distance, mode: 'fuzzy' }
+  // Fuzzy across all languages – pick best match
+  let bestIndex = -1, bestWord = '', bestDist = Infinity
+  for (const l of langs) {
+    const match = fuzzyMatchWord(slug, l, 2)
+    if (match && match.distance < bestDist) {
+      bestDist = match.distance; bestIndex = match.index; bestWord = match.word
+    }
   }
+  if (bestIndex !== -1)
+    return { ok: true, index: bestIndex, matched: bestWord, distance: bestDist, mode: 'fuzzy' }
 
   return { ok: false, input: token }
 }

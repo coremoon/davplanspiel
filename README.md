@@ -1,7 +1,6 @@
 # Insurance Planning Game (*Versicherungsplanspiel*)
 
-A multiplayer insurance management simulation game built for the  
-**German Society for Insurance and Financial Mathematics (DGVFM)**.
+A multiplayer insurance management simulation game.
 
 Teams compete as insurance companies over multiple rounds, setting premiums and dividends  
 while managing solvency ratios. The game master controls the simulation from a central dashboard.

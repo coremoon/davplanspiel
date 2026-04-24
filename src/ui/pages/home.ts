@@ -7,7 +7,7 @@ import { DEFAULT_CONFIG, type StaticConfig } from '@core/config'
 import { start_algorithmus } from '@core/algorithmus'
 import {
   getGroupadminData, getGruppen, getRunTimes, gruppenBereitFuerPeriode,
-  loadConfig, loadGamedata, resetSpiel, saveConfig, saveGamedata,
+  loadConfig, loadGamedata, archiveGame, saveConfig, saveGamedata,
   saveGroupadminInput, setRunTimes, createGame, listMyGames,
 } from '@store/supabase'
 import {
@@ -122,9 +122,12 @@ async function renderAdmin(root: HTMLElement): Promise<void> {
 
     <div class="panel panel-danger">
       <h3>${t('home.danger_zone')}</h3>
+      <p style="margin-bottom:.75rem;font-size:.875rem;color:var(--color-muted)">
+        ${t('home.danger_zone_hint')}
+      </p>
       <div class="btn-row">
         <button class="btn btn-outline-danger" id="btn-new-game">${t('home.btn_new_game')}</button>
-        <button class="btn btn-outline-danger" id="btn-reset-game">${t('home.btn_reset_full')}</button>
+        <button class="btn btn-outline-danger" id="btn-archive-game">${t('home.btn_archive_game')}</button>
       </div>
     </div>
   `
@@ -422,13 +425,13 @@ function attachAdminListeners(cfg: StaticConfig, gameId: string, runTimes: numbe
 
   attachGroupListeners(gameId)
 
-  document.getElementById('btn-reset-game')?.addEventListener('click', async () => {
-    if (!confirm(t('home.confirm_reset'))) return
+  // Archive game – releases the 4-word ID for reuse, navigates to create-game screen
+  document.getElementById('btn-archive-game')?.addEventListener('click', async () => {
+    if (!confirm(t('home.confirm_archive'))) return
     stopPolling()
-    await resetSpiel(gameId)
-    await setRunTimes(gameId, 0)
-    store.set({ runTimes: 0, gamedata: null, groupadminData: [], gruppen: [], cfg: DEFAULT_CONFIG })
-    showNotification('info', t('home.notify_reset'))
+    await archiveGame(gameId)
+    store.set({ spielId: '', cfg: null, runTimes: 0, gamedata: null, gruppen: [] })
+    showNotification('info', t('home.notify_archived'))
     navigate('home')
   })
 

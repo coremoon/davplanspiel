@@ -1,0 +1,229 @@
+{
+  "lang": {
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "es": "Español"
+  },
+
+  "nav": {
+    "home":           "Home",
+    "analyse_group":  "Analyse – Gruppe",
+    "analyse_market": "Analyse – Markt",
+    "overview":       "Übersicht",
+    "ranking":        "Platzierung",
+    "logout":         "Abmelden"
+  },
+
+  "login": {
+    "title":          "Versicherungsplanspiel",
+    "subtitle":       "der Deutschen Gesellschaft für\nVersicherungs- und Finanzmathematik",
+    "tab_admin":      "Spielleiter",
+    "tab_group":      "Gruppe",
+    "tab_viewer":     "Zuschauer",
+    "game_id_label":  "Spiel-ID",
+    "game_id_change": "ändern",
+    "game_id_prompt": "Spiel-ID eingeben:",
+    "btn_login":      "Anmelden",
+    "admin_email":        "E-Mail",
+    "admin_password":     "Passwort",
+    "admin_login":        "Als Spielleiter anmelden",
+    "admin_register":     "Neu registrieren",
+    "admin_no_account":   "Noch kein Konto?",
+    "admin_has_account":  "Bereits ein Konto?",
+    "group_name":         "Gesellschaftsname",
+    "group_name_hint":    "Name Ihrer Versicherungsgesellschaft",
+    "group_gameid":       "Spiel-ID (4 Wörter oder Buchstaben)",
+    "group_gameid_hint":  "z.B. apfel-hund-katze-stern oder ahks",
+    "group_btn":          "Spiel beitreten",
+    "viewer_group":       "Gruppenname",
+    "viewer_gameid":      "Spiel-ID",
+    "viewer_btn":         "Als Zuschauer einloggen",
+    "error_wrong_password":    "Falsches Passwort.",
+    "error_game_not_found":    "Spiel nicht gefunden. Bitte Spielleiter kontaktieren.",
+    "error_game_id_invalid":   "Ungültige Spiel-ID – bitte 4 Wörter oder Buchstaben eingeben.",
+    "error_game_full":         "Maximale Gruppenanzahl erreicht.",
+    "error_email_required":    "Bitte E-Mail eingeben.",
+    "error_password_required": "Bitte Passwort eingeben.",
+    "error_name_required":     "Bitte Gesellschaftsname eingeben (max. 40 Zeichen).",
+    "error_gameid_required":   "Bitte Spiel-ID eingeben."
+  },
+
+  "home": {
+    "title_admin":   "Spielsteuerung",
+    "title_group":   "Eingaben",
+    "title_viewer":  "Zuschauer",
+
+    "metric_round":        "Aktuelle Runde",
+    "metric_groups":       "Angemeldete Gruppen",
+    "metric_max_rounds":   "Max. Runden",
+    "metric_groups_ready": "Gruppen bereit",
+
+    "period_control":    "Rundensteuerung – Runde {{round}}",
+    "all_ready":         "✅ Alle {{count}} Gruppen haben Eingaben gespeichert.",
+    "waiting":           "⏳ Warte auf Eingaben: {{ready}} von {{total}} Gruppen bereit.",
+    "btn_run_algorithm": "▶️ Algorithmus starten",
+    "btn_run_disabled":  "Noch {{count}} Gruppe(n) ausstehend",
+
+    "settings_title":       "🎛️ Spielparameter",
+    "settings_structure":   "Spielstruktur",
+    "settings_expert":      "Expertenmodus",
+    "settings_expert_show": "Algorithmus-Parameter anzeigen",
+    "settings_random":      "Zufallsmodus aktiviert",
+    "cfg_groups":           "Anzahl Gruppen",
+    "cfg_years":            "Jahre pro Runde",
+    "cfg_rounds":           "Anzahl Runden",
+    "cfg_equity_start":     "Eigenkapital Start",
+    "cfg_premium_start":    "Prämie Start",
+    "cfg_policies_start":   "Policenzahl Start",
+    "cfg_minsolv":          "MinSolv (%)",
+    "cfg_maxsolv":          "MaxSolv (%)",
+    "cfg_fixcost":          "Fixkosten",
+    "cfg_varcost":          "Varkosten",
+    "cfg_dmg_mean":         "Schadenmittelwert",
+    "cfg_dmg_sd":           "Schadenst.abw.",
+    "cfg_risk":             "Risk StDev",
+    "cfg_elasticity":       "Preiselastizität (%)",
+    "btn_save_default":     "💾 Als Standard speichern",
+
+    "groups_registered":    "Angemeldete Gruppen",
+    "btn_delete_group":     "Löschen",
+    "confirm_delete_group": "Gruppe \"{{name}}\" wirklich löschen?",
+
+    "btn_new_game":      "➕ Neues Spiel erstellen",
+    "new_game_title":    "Neues Spiel erstellen",
+    "new_game_id_title": "🎮 Spiel-ID für dieses Spiel",
+    "new_game_id_hint":  "Diese ID teilst du mit deinen Teilnehmern. Sie können damit jedes Format eingeben: Wörter, Buchstaben oder den Kurzcode.",
+    "new_game_id_random":"Jedes neue Spiel erhält eine zufällige ID.",
+    "btn_start_game":    "🚀 Spiel starten",
+    "btn_new_id":        "🔄 Neue ID würfeln",
+    "btn_creating":      "⏳ Erstelle…",
+    "game_created":      "Spiel \"{{words}}\" erstellt!",
+    "not_logged_in":     "Nicht eingeloggt.",
+    "btn_copy":          "Kopieren",
+
+    "danger_zone":        "⚠️ Gefahrenzone",
+    "btn_reset_full":     "🗑️ Vollständig zurücksetzen",
+    "confirm_reset":      "ACHTUNG: Alle Daten werden unwiderruflich gelöscht!",
+
+    "game_not_started":  "Das Spiel wurde noch nicht gestartet. Warte auf den Spielleiter.",
+    "game_finished":     "Das Spiel ist beendet! Sieh dir die Platzierung an.",
+    "btn_goto_ranking":  "🏆 Zur Platzierung",
+
+    "input_premium":      "Prämienanpassung",
+    "input_premium_hint": "Alte Prämie: {{value}} €",
+    "new_premium":        "Neue Prämie:",
+    "input_dividend":     "Dividendenzahlung",
+    "input_dividend_hint":"Alte Dividende: {{old}} € | Erlaubt: {{min}} – {{max}} €",
+    "btn_save_inputs":    "💾 Eingaben speichern",
+    "inputs_saved":       "Eingaben gespeichert!",
+
+    "viewer_info":  "Wechsle zu \"Analyse – Gruppe\" oder \"Analyse – Markt\" für Charts.",
+    "refresh":      "Refresh:",
+    "refresh_off":  "aus",
+
+    "notify_saved":         "Parameter als Standard gespeichert.",
+    "notify_reset":         "Spiel zurückgesetzt.",
+    "notify_period_done":   "Runde {{round}} abgeschlossen!",
+    "notify_group_deleted": "Gruppe \"{{name}}\" gelöscht.",
+    "computing":            "⏳ Berechne…"
+  },
+
+  "analyse_group": {
+    "title":             "Analyse – Gruppe",
+    "group_label":       "Gruppe:",
+    "no_data":           "Noch keine Spieldaten vorhanden.",
+    "no_group_data":     "Keine Daten für diese Gruppe.",
+    "market_share":      "Marktanteil",
+    "solvency":          "Solvenzquote",
+    "cum_dividend":      "Kum. Dividende",
+    "avg_profit":        "Ø-Gewinn ({{n}}J)",
+    "profit":            "Gewinn",
+    "chart_premiums":    "Prämien und Policenanzahl",
+    "chart_ratios":      "Quoten",
+    "chart_equity":      "Eigenkapital und kumulierte Dividenden",
+    "chart_result":      "Versicherungstechnisches Ergebnis",
+    "series_policies":   "Policenanzahl",
+    "series_premium":    "Prämie",
+    "series_competitor": "VU {{n}} (Prämie)",
+    "series_cost_ratio": "Kostenquote",
+    "series_loss_ratio": "Schadenquote",
+    "series_combined":   "Kombinierte S-K-Quote",
+    "series_solvency":   "Solvenzquote",
+    "series_equity":     "Eigenkapital",
+    "series_cum_div":    "Kum. Dividendenausschüttung",
+    "series_result":     "VT-Ergebnis"
+  },
+
+  "analyse_market": {
+    "title":               "Marktanalyse",
+    "no_data":             "Noch keine Spieldaten vorhanden.",
+    "chart_shares":        "Marktanteile",
+    "chart_dividends":     "Gesamte Dividendenausschüttungen",
+    "chart_solvency":      "Solvenzquoten",
+    "chart_results":       "Versicherungstechnisches Ergebnis",
+    "chart_avg_premium":   "Durchschnittsprämie im Versicherungsmarkt",
+    "chart_market_ratios": "Quoten des Versicherungsmarktes",
+    "series_avg_premium":  "Durchschnittsprämie",
+    "series_loss_ratio":   "Schadenquote",
+    "series_cost_ratio":   "Kostenquote",
+    "series_combined":     "Kombinierte Schaden-Kosten-Quote",
+    "no_dividends":        "Noch keine Dividenden ausgeschüttet.",
+    "no_game_data":        "Noch keine Spieldaten vorhanden.",
+    "title_market_analysis": "Marktanalyse"
+  },
+
+  "overview": {
+    "title":              "Übersicht (Spielleiter)",
+    "no_access":          "Kein Zugang.",
+    "group_inputs":       "Gruppen-Eingaben",
+    "game_data":          "Spieldaten (vollständig)",
+    "no_inputs":          "Noch keine Eingaben.",
+    "no_data":            "Noch keine Spieldaten.",
+    "col_group":          "Gruppe",
+    "col_premium_adj":    "Prämienanpassung",
+    "col_dividend":       "Dividende",
+    "col_round":          "Runde",
+    "col_year":           "Jahr",
+    "col_premium":        "Prämie",
+    "col_policies":       "Policen",
+    "col_solvency":       "Solvenz",
+    "col_result":         "VT-Erg.",
+    "col_cum_div":        "Div. cum",
+    "btn_download_random":"⬇️ Zufallszahlen (CSV)",
+    "btn_download_all":   "⬇️ Alle Daten (CSV)"
+  },
+
+  "ranking": {
+    "title":           "Platzierung",
+    "col_rank":        "Platz",
+    "col_group":       "Gruppe",
+    "col_cum_dividend":"Kum. Dividendenausschüttung",
+    "col_solvency":    "Solvenzquote",
+    "winner_message":  "🎉 Herzlichen Glückwunsch {{group}}! Sie haben von allen Versicherungen am besten performt!",
+    "no_data":         "Noch keine Spieldaten vorhanden."
+  },
+
+  "status": {
+    "not_started": "Nicht gestartet",
+    "game_over":   "Spiel beendet",
+    "round":       "Runde {{current}} / {{total}}"
+  },
+
+  "reset": {
+    "title":      "Spiel zurückgesetzt",
+    "game_gone":  "Der Spielleiter hat das Spiel vollständig zurückgesetzt.",
+    "group_gone": "Deine Gruppe wurde entfernt oder das Spiel wurde neu gestartet.",
+    "restart":    "Der Spielleiter hat das Spiel neu gestartet. Bitte melde dich neu an.",
+    "btn_back":   "Zur Anmeldung"
+  },
+
+  "loading":   "Laden…",
+  "computing": "Berechne…",
+  "year_axis": "Jahr",
+
+  "gameid": {
+    "corrected":    "Korrektur: \"{{input}}\" → \"{{matched}}\"",
+    "display_hint": "Teile diese ID mit deinen Teilnehmern:"
+  }
+}

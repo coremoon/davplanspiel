@@ -1,0 +1,35 @@
+{
+  "name": "planspiel-js",
+  "version": "0.1.0",
+  "description": "Insurance Planning Game – TypeScript/Vite/Supabase",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev":        "vite",
+    "build":      "tsc && vite build",
+    "preview":    "vite preview",
+    "lint":       "eslint src --ext .ts,.tsx",
+    "check":      "tsc --noEmit",
+    "test":       "vitest run",
+    "test:watch": "vitest",
+    "simulate":   "npx tsx scripts/simulate.ts",
+    "sim:quick":  "npx tsx scripts/simulate.ts --gruppen 4 --perioden 3",
+    "sim:full":   "npx tsx scripts/simulate.ts --gruppen 6 --perioden 6 --random"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0",
+    "apexcharts":            "^3.49.0",
+    "i18next":               "^23.11.5"
+  },
+  "devDependencies": {
+    "@types/node":                      "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser":        "^7.0.0",
+    "@vitest/coverage-v8":              "^1.6.0",
+    "eslint":      "^8.57.0",
+    "tsx":         "^4.11.0",
+    "typescript":  "^5.4.0",
+    "vite":        "^5.2.0",
+    "vitest":      "^1.6.0"
+  }
+}

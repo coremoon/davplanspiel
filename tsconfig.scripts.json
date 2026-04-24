@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target":           "ES2022",
+    "module":           "CommonJS",
+    "moduleResolution": "node",
+    "lib":              ["ES2022"],
+    "strict":           true,
+    "esModuleInterop":  true,
+    "skipLibCheck":     true,
+    "outDir":           "./dist-scripts",
+    "rootDir":          ".",
+    "baseUrl":          ".",
+    "paths": {
+      "@core/*":  ["src/core/*"],
+      "@store/*": ["src/store/*"],
+      "@auth/*":  ["src/auth/*"]
+    }
+  },
+  "include": ["scripts", "src/core", "src/store", "src/auth"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -5,7 +5,8 @@
  * Replaces scipy.stats (Python) and R's qlnorm/plnorm/qnorm.
  */
 
-import { jStat } from 'jstat'
+import jStatModule from 'jstat'
+const jStat = (jStatModule as any).jStat ?? jStatModule
 
 /**
  * Inverse normal distribution (quantile function).

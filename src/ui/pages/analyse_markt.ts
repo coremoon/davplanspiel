@@ -60,10 +60,10 @@ export async function render(root: HTMLElement): Promise<void> {
         divPie,
         groups,
         groups.map(g => current.find(r => r.Gruppe === g)!.Dividendenausschuettung_cum / totalDiv),
-        'Gesamte Dividendenausschüttungen',
+        t('dividend_cashed_out_total'),
       )
     } else if (divPie) {
-      divPie.innerHTML = '<p class="chart-empty">Noch keine Dividenden ausgeschüttet.</p>'
+      divPie.innerHTML = `<p class="chart-empty">${t('no_dividend_cashed_out_yet')}</p>`
     }
 
     // Solvency ratios (bar)

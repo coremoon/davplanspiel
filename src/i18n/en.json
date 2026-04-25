@@ -152,5 +152,8 @@
   "gameid": {
     "corrected": "Correction: \"{{input}}\" → \"{{matched}}\"",
     "display_hint": "Share this ID with your participants:"
-  }
+  },
+  "no_dividend_cashed_out_yet": "No dividends have been paid out yet..",
+  "dividend_cashed_out_total": "Total dividend payments"
+
 }

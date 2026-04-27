@@ -33,8 +33,26 @@ jobs:
       - name: Run tests
         run: npm test
 
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npm run check
+
   deploy:
-    needs: test
+    needs: [test, check]
     runs-on: ubuntu-latest
     environment:
       name: github-pages

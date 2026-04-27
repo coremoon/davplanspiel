@@ -15,7 +15,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -34,21 +53,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
-
       - name: Build
         env:
           VITE_SUPABASE_URL:      ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_BASE_URL:          /davplanspiel/
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_PAT: ${{ secrets.SUPABASE_PAT }}
-          SUPABASE_SECRET: ${{ secrets.SUPABASE_SECRET }}
-          HCAPTCHA_SECRET: ${{ secrets.HCAPTCHA_SECRET }}
-          VITE_CAPTCHA_ENABLED: true
-          VITE_HCAPTCHA_SITEKEY: ${{ secrets.VITE_HCAPTCHA_SITEKEY }}
-
+          SUPABASE_URL:           ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PAT:           ${{ secrets.SUPABASE_PAT }}
+          SUPABASE_SECRET:        ${{ secrets.SUPABASE_SECRET }}
+          HCAPTCHA_SECRET:        ${{ secrets.HCAPTCHA_SECRET }}
+          VITE_CAPTCHA_ENABLED:   true
+          VITE_HCAPTCHA_SITEKEY:  ${{ secrets.VITE_HCAPTCHA_SITEKEY }}
         run: npm run build
 
       - name: Setup Pages
